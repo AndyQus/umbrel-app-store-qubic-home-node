@@ -2,11 +2,27 @@ services:
   app_proxy:
     environment:
       APP_HOST: qubic-home-node_edge
-      APP_PORT: 8080
+      APP_PORT: 8090
       PROXY_AUTH_ADD: "true"
-      # /v1, /v2, /rpc, /status, /balance, /tick = RPC-/Bob-kompatible Endpunkte,
-      # damit andere Apps & Geräte die Node ohne Umbrel-Login ansprechen können.
-      PROXY_AUTH_WHITELIST: "/,/api/*,/swagger/*,/gossip/*,/v1/*,/v2/*,/rpc,/status,/balance/*,/tick/*,/query/*"
+      # Ohne Umbrel-Login erreichbar: RPC-/Bob-kompatible Lese-Endpunkte + Gossip.
+      # BEWUSST NICHT mehr /api/* pauschal: die mutierenden Admin-Endpunkte
+      # (/api/db/*, /api/settings, /api/registerPeer, …) verlangen jetzt den
+      # Umbrel-Login. /api/watched/* bleibt offen (Mesh-Mirroring), ist aber im
+      # Core zusätzlich per Gossip-Shared-Secret abgesichert.
+      PROXY_AUTH_WHITELIST: "/,/api/watched/*,/api/events,/api/events/*,/api/transfers,/api/health,/api/balances,/api/balances/*,/api/ticks,/api/transactions,/swagger/*,/gossip/*,/v1/*,/v2/*,/rpc,/status,/balance/*,/tick/*,/query/*"
+
+  # Einmaliger Init-Container: Docker legt das Tor-Hidden-Service-Verzeichnis
+  # beim ersten Start als root:root 0755 an (weil core/ui es bind-mounten, bevor
+  # Tor existiert). Tor akzeptiert HiddenServiceDir aber nur mit 0700 und geht
+  # sonst in eine Restart-Schleife ("Permissions ... too permissive") – es
+  # entsteht nie eine hostname-Datei. Deshalb hier vor allem anderen chmod 700.
+  qubic-home-node_tor_perms:
+    image: alpine:3.20
+    restart: "no"
+    user: "0:0"
+    command: sh -c "chmod 700 /tor-host"
+    volumes:
+      - /home/umbrel/umbrel/tor/data/app-qubic-home-node:/tor-host
 
   qubic-home-node_edge:
     image: nginx:1.27-alpine
@@ -21,8 +37,11 @@ services:
       default: {}
 
   qubic-home-node_core:
-    image: andyqus/qubic-home-node:core-v1.2.0
+    image: andyqus/qubic-home-node:core-v1.2.2
     restart: unless-stopped
+    depends_on:
+      qubic-home-node_tor_perms:
+        condition: service_completed_successfully
     environment:
       - ASPNETCORE_URLS=http://0.0.0.0:9090
       - ASPNETCORE_ENVIRONMENT=Production
@@ -62,13 +81,13 @@ services:
       - umbrel_main_network      # WICHTIG!
 
   qubic-home-node_ui:
-    image: andyqus/qubic-home-node:ui-v1.2.0
+    image: andyqus/qubic-home-node:ui-v1.2.2
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_DATAPROTECTION__KEYRING__PATH=/app/data/keys
       - ASPNETCORE_DATAPROTECTION__APPLICATIONNAME=QubicHomeNode-UI
-      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - ASPNETCORE_URLS=http://0.0.0.0:8090
       - CORE_API_URL=http://qubic-home-node_core:9090
       - OnionHostnamePath=/tor-host/hostname
       - DATA_DIR=/app/data

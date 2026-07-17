@@ -4,8 +4,8 @@ name: "Qubic Home Node"
 tagline: "Personal Qubic archive node – keeps your transaction history forever"
 icon: "https://raw.githubusercontent.com/AndyQus/umbrel-app-store-qubic-home-node/main/qubic-home-node/icon.svg"
 category: "Finance"
-version: "1.2.0"
-port: 8080
+version: "1.2.2"
+port: 8090
 description: |-
   A lightweight personal archive node for the Qubic network.
 
@@ -34,6 +34,21 @@ repo: "https://github.com/AndyQus/umbrel-app-store-qubic-home-node"
 support: "https://github.com/AndyQus/umbrel-app-store-qubic-home-node/issues"
 gallery: []
 releaseNotes: |-
+  Version 1.2.2:
+   - Changed: web UI port moved from 8080 to 8090 (8080 collided with
+     other Umbrel apps such as QubicFlow, blocking installation)
+   - New: dashboard is now the start page (with peer-mesh, transfer-sync
+     and connected-apps animations), settings page redesigned
+   - New: two languages (English/German, selectable in Settings)
+   - New: "Auto-watch queried addresses" setting (default on) so external
+     apps like QubicFlow automatically fill the archive & event feed
+
+  Version 1.2.1:
+   - Fixed: Tor onion address was never created on fresh installs
+     ("Permissions on directory ... are too permissive"). The hidden
+     service directory is now set to 0700 automatically on startup –
+     no manual configuration needed.
+
   Version 1.2.0 – complete storage overhaul:
    - Renamed: "Qubic LiteNode+" is now "Qubic Home Node" (avoids confusion with
      the official Core Lite Node and Bob Node)

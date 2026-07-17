@@ -1,89 +1,87 @@
 services:
   app_proxy:
     environment:
-      APP_HOST: qubic-lite-node_edge
+      APP_HOST: qubic-home-node_edge
       APP_PORT: 8080
       PROXY_AUTH_ADD: "true"
-      PROXY_AUTH_WHITELIST: "/,/api/*,/swagger/*,/gossip/*"
+      # /v1, /v2, /rpc, /status, /balance, /tick = RPC-/Bob-kompatible Endpunkte,
+      # damit andere Apps & Geräte die Node ohne Umbrel-Login ansprechen können.
+      PROXY_AUTH_WHITELIST: "/,/api/*,/swagger/*,/gossip/*,/v1/*,/v2/*,/rpc,/status,/balance/*,/tick/*,/query/*"
 
-  # qubic-lite-node_edge:
-  #   image: nginx:1.27-alpine
-  #   restart: unless-stopped
-  #   depends_on: [qubic-lite-node_ui, qubic-lite-node_core]
-  #   volumes:
-  #     - ${APP_DATA_DIR}/edge/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-  #   networks:
-  #     - default
-  #     - umbrel_main_network      # optional, schadet nicht
-
-  # in deiner docker-compose.yml, Service: qubic-lite-node_edge
-  qubic-lite-node_edge:
+  qubic-home-node_edge:
     image: nginx:1.27-alpine
     restart: unless-stopped
-    depends_on: [qubic-lite-node_ui, qubic-lite-node_core]
+    depends_on: [qubic-home-node_ui, qubic-home-node_core]
     volumes:
       - ${APP_DATA_DIR}/edge/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       umbrel_main_network:
         aliases:
-          - qubic-lite-node_edge   # <— wichtiger Alias für app_proxy
+          - qubic-home-node_edge   # <— wichtiger Alias für app_proxy
       default: {}
 
-  qubic-lite-node_core:
-    image: andyqus/qubic-lite-node:core-v1.1.6
+  qubic-home-node_core:
+    image: andyqus/qubic-home-node:core-v1.2.0
     restart: unless-stopped
     environment:
       - ASPNETCORE_URLS=http://0.0.0.0:9090
       - ASPNETCORE_ENVIRONMENT=Production
-      # - TorProxy=socks5://tor:9050
-      - TorProxy=socks5://tor_proxy:9050   # WICHTIG! so heißt der Tor-Service in Umbrel, alternativ socks5://qubic-lite-node-tor_server-1:9050
+      # WICHTIG: so heißt der Tor-Service in Umbrel
+      - TorProxy=socks5://tor_proxy:9050
       - ASPNETCORE_DATAPROTECTION__KEYRING__PATH=/app/data/keys
-      - ASPNETCORE_DATAPROTECTION__APPLICATIONNAME=QubicLite-Core
+      - ASPNETCORE_DATAPROTECTION__APPLICATIONNAME=QubicHomeNode-Core
       - DATA_DIR=/app/data
       - OnionHostnamePath=/tor-host/hostname
-      - GOSSIP_SHARED_SECRET=mysecret_b3d958e5-d3b7-4b47-a8ef-13e67fd07f85   # ✅ HIER hinzufügen
+      # Netzwerkweiter Pre-Shared-Key des Home Node-Meshes:
+      # MUSS auf allen Peers identisch sein, sonst verwerfen sie gegenseitig ihre Gossip-Digests.
+      - GOSSIP_SHARED_SECRET=mysecret_b3d958e5-d3b7-4b47-a8ef-13e67fd07f85
       - GOSSIP_ALLOW_UNVERIFIED=false
       - WATCH_MIRROR_TO_ALL=true
+      # Archiv-Einstellungen:
+      # 0 = ALLES behalten (Archiv-Modus, Default). N = nur die letzten N Epochen-Shards behalten.
+      - ARCHIVE_RETENTION_EPOCHS=0
+      # Tick-Fenstergröße für den lückenlosen Backfill (Default 5000000)
+      # - ARCHIVE_BACKFILL_WINDOW=5000000
       - HTTP_PROXY=
       - HTTPS_PROXY=
       - ALL_PROXY=
       - NO_PROXY=localhost,127.0.0.1,::1,.onion
     volumes:
       - ${APP_DATA_DIR}/core-data:/app/data
-      - /home/umbrel/umbrel/tor/data/app-qubic-lite-node:/tor-host:ro
+      # Umbrel legt die Hidden-Service-Daten der App hier ab (Pfad ist Umbrel-spezifisch)
+      - /home/umbrel/umbrel/tor/data/app-qubic-home-node:/tor-host:ro
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9090/api/health > /dev/null || exit 1"]
-      interval: 20s
-      timeout: 5s
-      retries: 10
+      # curl statt wget: das aspnet-Debian-Image enthält kein wget (Healthcheck schlug immer fehl!)
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9090/api/health > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 8s
+      retries: 5
+      start_period: 60s
     networks:
       - default
       - umbrel_main_network      # WICHTIG!
 
-  qubic-lite-node_ui:
-    image: andyqus/qubic-lite-node:ui-v1.1.6
+  qubic-home-node_ui:
+    image: andyqus/qubic-home-node:ui-v1.2.0
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_DATAPROTECTION__KEYRING__PATH=/app/data/keys
-      - ASPNETCORE_DATAPROTECTION__APPLICATIONNAME=QubicLite-UI
+      - ASPNETCORE_DATAPROTECTION__APPLICATIONNAME=QubicHomeNode-UI
       - ASPNETCORE_URLS=http://0.0.0.0:8080
-      - CORE_API_URL=http://qubic-lite-node_core:9090
+      - CORE_API_URL=http://qubic-home-node_core:9090
       - OnionHostnamePath=/tor-host/hostname
       - DATA_DIR=/app/data
     volumes:
       - ${APP_DATA_DIR}/ui-data:/app/data
-      - /home/umbrel/umbrel/tor/data/app-qubic-lite-node:/tor-host:ro
-    depends_on: [qubic-lite-node_core]
+      - /home/umbrel/umbrel/tor/data/app-qubic-home-node:/tor-host:ro
+    depends_on: [qubic-home-node_core]
     networks:
       - default
       - umbrel_main_network      # optional
 
 networks:
-  # ❌ KEIN external hier! Umbrel erzeugt das default-Netz selbst.
-  # ❌ Kein "name:" für default nötig.
-  # default:  <-- diesen Block komplett weglassen
-
+  # ❌ KEIN external für default – Umbrel erzeugt das default-Netz selbst.
   # ✅ Nur das Umbrel-Main-Netz als external anhängen:
   umbrel_main_network:
     external: true

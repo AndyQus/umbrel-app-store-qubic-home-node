@@ -1,6 +1,6 @@
-# Qubic LiteNode for UmbrelOS Store
+# Qubic Home Node for UmbrelOS Store
 
-Qubic LiteNode integrates into UmbrelOS as a community app.  
+Qubic Home Node integrates into UmbrelOS as a community app.  
 It provides a lightweight node that synchronizes transactions and data from the Qubic network via Tor and comes with a Blazor-based dashboard.
 
 ## 🚀 Features
@@ -11,7 +11,7 @@ It provides a lightweight node that synchronizes transactions and data from the 
 
 ## 📦 Installation
 1. Add this repository as a custom app store in your UmbrelOS settings.
-2. Search for **Qubic LiteNode** in the Umbrel App Store.
+2. Search for **Qubic Home Node** in the Umbrel App Store.
 3. Install and open the app.
 
 ## 🛠️ Development

@@ -6,10 +6,13 @@ services:
       PROXY_AUTH_ADD: "true"
       # Ohne Umbrel-Login erreichbar: RPC-/Bob-kompatible Lese-Endpunkte + Gossip.
       # BEWUSST NICHT mehr /api/* pauschal: die mutierenden Admin-Endpunkte
-      # (/api/db/*, /api/settings, /api/registerPeer, …) verlangen jetzt den
-      # Umbrel-Login. /api/watched/* bleibt offen (Mesh-Mirroring), ist aber im
-      # Core zusätzlich per Gossip-Shared-Secret abgesichert.
-      PROXY_AUTH_WHITELIST: "/,/api/watched/*,/api/events,/api/events/*,/api/transfers,/api/health,/api/balances,/api/balances/*,/api/ticks,/api/transactions,/swagger/*,/gossip/*,/v1/*,/v2/*,/rpc,/status,/balance/*,/tick/*,/query/*"
+      # (/api/db/*, /api/settings, …) verlangen jetzt den Umbrel-Login.
+      # /api/watched/* und /api/registerPeer bleiben offen (Mesh-Mirroring bzw.
+      # gegenseitige Peer-Registrierung über Tor), sind aber im Core zusätzlich
+      # per Gossip-Shared-Secret abgesichert. /api/peers ist der Read-only-
+      # Peer-Austausch des Meshes (wie in v1.1.6, als /api/* offen war – ohne
+      # diese beiden Pfade findet sich das Mesh hinter dem Umbrel-Login nicht).
+      PROXY_AUTH_WHITELIST: "/,/api/watched/*,/api/peers,/api/registerPeer,/api/events,/api/events/*,/api/transfers,/api/health,/api/balances,/api/balances/*,/api/ticks,/api/transactions,/swagger/*,/gossip/*,/v1/*,/v2/*,/rpc,/status,/balance/*,/tick/*,/query/*"
 
   # Einmaliger Init-Container: Docker legt das Tor-Hidden-Service-Verzeichnis
   # beim ersten Start als root:root 0755 an (weil core/ui es bind-mounten, bevor
@@ -37,7 +40,7 @@ services:
       default: {}
 
   qubic-home-node_core:
-    image: andyqus/qubic-home-node:core-v1.2.3
+    image: andyqus/qubic-home-node:core-v1.2.4
     restart: unless-stopped
     depends_on:
       qubic-home-node_tor_perms:
@@ -81,7 +84,7 @@ services:
       - umbrel_main_network      # WICHTIG!
 
   qubic-home-node_ui:
-    image: andyqus/qubic-home-node:ui-v1.2.3
+    image: andyqus/qubic-home-node:ui-v1.2.4
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production

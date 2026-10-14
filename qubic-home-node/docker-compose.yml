@@ -12,7 +12,7 @@ services:
       # per Gossip-Shared-Secret abgesichert. /api/peers ist der Read-only-
       # Peer-Austausch des Meshes (wie in v1.1.6, als /api/* offen war – ohne
       # diese beiden Pfade findet sich das Mesh hinter dem Umbrel-Login nicht).
-      PROXY_AUTH_WHITELIST: "/,/api/watched/*,/api/peers,/api/registerPeer,/api/events,/api/events/*,/api/transfers,/api/health,/api/balances,/api/balances/*,/api/ticks,/api/transactions,/swagger/*,/gossip/*,/v1/*,/v2/*,/rpc,/status,/balance/*,/tick/*,/query/*"
+      PROXY_AUTH_WHITELIST: "/,/api/watched/*,/api/peers,/api/registerPeer,/api/events,/api/events/*,/api/transfers,/api/health,/api/balances,/api/balances/*,/api/ticks,/api/transactions,/swagger/*,/gossip/*,/v1/*,/v2/*,/live/*,/rpc,/qubic,/status,/balance/*,/tick/*,/query/*"
 
   # Einmaliger Init-Container: Docker legt das Tor-Hidden-Service-Verzeichnis
   # beim ersten Start als root:root 0755 an (weil core/ui es bind-mounten, bevor
@@ -40,7 +40,7 @@ services:
       default: {}
 
   qubic-home-node_core:
-    image: andyqus/qubic-home-node:core-v1.2.7
+    image: andyqus/qubic-home-node:core-v1.2.8
     restart: unless-stopped
     depends_on:
       qubic-home-node_tor_perms:
@@ -84,7 +84,7 @@ services:
       - umbrel_main_network      # WICHTIG!
 
   qubic-home-node_ui:
-    image: andyqus/qubic-home-node:ui-v1.2.7
+    image: andyqus/qubic-home-node:ui-v1.2.8
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production

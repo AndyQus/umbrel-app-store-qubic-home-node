@@ -4,7 +4,7 @@ name: "Qubic Home Node"
 tagline: "Personal Qubic archive node – keeps your transaction history forever"
 icon: "https://raw.githubusercontent.com/AndyQus/umbrel-app-store-qubic-home-node/main/qubic-home-node/icon.svg"
 category: "Finance"
-version: "1.2.6"
+version: "1.2.7"
 port: 8090
 description: |-
   A lightweight personal archive node for the Qubic network.
@@ -34,6 +34,19 @@ repo: "https://github.com/AndyQus/umbrel-app-store-qubic-home-node"
 support: "https://github.com/AndyQus/umbrel-app-store-qubic-home-node/issues"
 gallery: []
 releaseNotes: |-
+  Version 1.2.7 – three new dashboard views to try:
+   - New: "Cockpit" tab – a dense, mining-style overview that fits all key
+     numbers, upstream nodes, mesh peers, events, transactions, balances,
+     epoch archive, apps and the worker log on one screen
+   - New: "Network" tab – focused on who is connected to your node: peer
+     mesh, transfer-sync lanes (RPC/Bob/Mesh) and connected apps, each with
+     a live animation and a detailed list, in the Qubic Report look
+   - New: "Topology" tab – a blueprint-style schematic of your node showing
+     data sources, mesh peers, apps and the archive with live values on the
+     links, plus a parts list
+   - The classic dashboard stays the start page; all views work in dark and
+     light mode
+
   Version 1.2.6:
    - New: dashboard now has a "+ Peer" button next to the Tor status chip –
      add a peer's onion address in a quick dialog without leaving the

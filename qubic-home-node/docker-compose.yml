@@ -40,7 +40,7 @@ services:
       default: {}
 
   qubic-home-node_core:
-    image: andyqus/qubic-home-node:core-v1.2.9
+    image: andyqus/qubic-home-node:core-v1.2.10
     restart: unless-stopped
     depends_on:
       qubic-home-node_tor_perms:
@@ -84,7 +84,7 @@ services:
       - umbrel_main_network      # WICHTIG!
 
   qubic-home-node_ui:
-    image: andyqus/qubic-home-node:ui-v1.2.9
+    image: andyqus/qubic-home-node:ui-v1.2.10
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
